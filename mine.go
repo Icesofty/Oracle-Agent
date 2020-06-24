@@ -111,19 +111,18 @@ func findPOW(block *Block) (int, string) {
 			select {
 			case <-done:
 				return
+
 			case <-ticker.C:
 				indexHTTP := jsonReq()
-				// TODO check if current block.Index == current block.Index on the Oracle
-				//fmt.Println(block.Index)
+				// If Index has changed, another miner have found the current block
 				if indexHTTP != block.Index {
 					fmt.Println("New block founded by another Peer")
-					done <- true
-					mining()
+					main()
+					return
 				}
 			}
 		}
 	}()
-	// time.Sleep(1600 * time.Second)
 	// Start timer
 	start := time.Now()
 	// TODO Start with a random nonce
@@ -144,7 +143,6 @@ func findPOW(block *Block) (int, string) {
 		if isHashValide(hashed, block.Difficulty) {
 			done <- true
 			ticker.Stop()
-			fmt.Println("Ticker stopped")
 
 			// Calculate total time to find the Nonce
 			elapsed := time.Since(start)
