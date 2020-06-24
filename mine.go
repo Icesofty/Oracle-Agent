@@ -104,7 +104,22 @@ func mineBlock() {
 }
 
 func findPOW(block *Block) (int, string) {
+	ticker := time.NewTicker(5 * time.Second)
+	done := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-done:
+				return
+			case t := <-ticker.C:
+				fmt.Println("Tick at", t)
+			}
+		}
+	}()
+	// time.Sleep(1600 * time.Second)
+	// Start timer
 	start := time.Now()
+	// Start nonce at 0
 	nonce := 0
 	// Block datas to hash
 	record := block.Hash + block.PreviousHash + strconv.Itoa(int(block.Timestamp)) + strconv.Itoa(block.Index) + strconv.Itoa(nonce)
@@ -112,12 +127,18 @@ func findPOW(block *Block) (int, string) {
 	h.Write([]byte(record))
 	hashed := h.Sum(nil)
 
-	//POW woking function - Nonce will be incremented by one each round until the Hash starts with number of 0
+	/* TODO START GO ROUTINE */
+	fmt.Println("ENTER LOOP")
+	// POW woking function - Nonce will be incremented by one each round until the Hash starts with number of 0
 	// defined in the difficulty
 	for {
-		//if true, the POW has been found - Hash of Data + Nonce begin with n 0 (n is based on the difficulty)
+		// if true, the POW has been found - Hash of Data + Nonce begin with n 0 (n is based on the difficulty)
 		if isHashValide(hashed, block.Difficulty) {
-			//Calculate total time to find the Nonce
+			done <- true
+			ticker.Stop()
+			fmt.Println("Ticker stopped")
+
+			// Calculate total time to find the Nonce
 			elapsed := time.Since(start)
 			color.Green.Print("Founded!\n")
 			log.Printf("Total time :\n %s", elapsed)
@@ -129,6 +150,7 @@ func findPOW(block *Block) (int, string) {
 
 			return nonce, hashDecoded
 		} else {
+			// Increment the nonce by one
 			nonce++
 			// Reset the datas from origin, and add the new nonce
 			record = block.Hash + block.PreviousHash + strconv.Itoa(int(block.Timestamp)) + strconv.Itoa(block.Index) + strconv.Itoa(nonce)
