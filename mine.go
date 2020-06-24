@@ -1,3 +1,5 @@
+// This is just a test
+
 package main
 
 import (
