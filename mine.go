@@ -128,9 +128,7 @@ func findPOW(block *Block) (int, string) {
 	}()
 	// Start timer
 	start := time.Now()
-	// TODO Start with a random nonce
-	// Start nonce at 0
-	// nonce := 0
+	// Random nonce between 0 and 9223372036854775807
 	nonce := rand.Intn(9223372036854775807)
 	// Block datas to hash
 	record := block.Hash + block.PreviousHash + strconv.Itoa(int(block.Timestamp)) + strconv.Itoa(block.Index) + strconv.Itoa(nonce)
