@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -129,14 +130,13 @@ func findPOW(block *Block) (int, string) {
 	start := time.Now()
 	// TODO Start with a random nonce
 	// Start nonce at 0
-	nonce := 0
+	// nonce := 0
+	nonce := rand.Intn(9223372036854775807)
 	// Block datas to hash
 	record := block.Hash + block.PreviousHash + strconv.Itoa(int(block.Timestamp)) + strconv.Itoa(block.Index) + strconv.Itoa(nonce)
 	h := sha3.New256()
 	h.Write([]byte(record))
 	hashed := h.Sum(nil)
-
-	/* TODO START GO ROUTINE */
 
 	// POW woking function - Nonce will be incremented by one each round until the Hash starts with number of 0
 	// defined in the difficulty

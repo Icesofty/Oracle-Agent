@@ -1,6 +1,6 @@
 package main
 
-const baseURL string = "https://oracle-blockchain.glitch.me/"
+const baseURL string = "https://YOUR_SERVER.com/"
 
 func main() {
 
