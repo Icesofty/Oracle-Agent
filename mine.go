@@ -104,21 +104,29 @@ func mineBlock() {
 }
 
 func findPOW(block *Block) (int, string) {
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 	done := make(chan bool)
 	go func() {
 		for {
 			select {
 			case <-done:
 				return
-			case t := <-ticker.C:
-				fmt.Println("Tick at", t)
+			case <-ticker.C:
+				indexHTTP := jsonReq()
+				// TODO check if current block.Index == current block.Index on the Oracle
+				//fmt.Println(block.Index)
+				if indexHTTP != block.Index {
+					fmt.Println("New block founded by another Peer")
+					done <- true
+					mining()
+				}
 			}
 		}
 	}()
 	// time.Sleep(1600 * time.Second)
 	// Start timer
 	start := time.Now()
+	// TODO Start with a random nonce
 	// Start nonce at 0
 	nonce := 0
 	// Block datas to hash
@@ -128,7 +136,7 @@ func findPOW(block *Block) (int, string) {
 	hashed := h.Sum(nil)
 
 	/* TODO START GO ROUTINE */
-	fmt.Println("ENTER LOOP")
+
 	// POW woking function - Nonce will be incremented by one each round until the Hash starts with number of 0
 	// defined in the difficulty
 	for {
@@ -149,16 +157,46 @@ func findPOW(block *Block) (int, string) {
 			sendNonce(nonce)
 
 			return nonce, hashDecoded
-		} else {
-			// Increment the nonce by one
-			nonce++
-			// Reset the datas from origin, and add the new nonce
-			record = block.Hash + block.PreviousHash + strconv.Itoa(int(block.Timestamp)) + strconv.Itoa(block.Index) + strconv.Itoa(nonce)
-			h = sha3.New256()
-			h.Write([]byte(record))
-			hashed = h.Sum(nil)
-
 		}
+		// Increment the nonce by one
+		nonce++
+		// Reset the datas from origin, and add the new nonce
+		record = block.Hash + block.PreviousHash + strconv.Itoa(int(block.Timestamp)) + strconv.Itoa(block.Index) + strconv.Itoa(nonce)
+		h = sha3.New256()
+		h.Write([]byte(record))
+		hashed = h.Sum(nil)
 	}
 
+}
+
+func jsonReq() int {
+	clientBlockchain := http.Client{
+		Timeout: time.Second * 2,
+	}
+	req, err := http.NewRequest(http.MethodGet, baseURL+"/blocks.json", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	resp, getErr := clientBlockchain.Do(req)
+	if getErr != nil {
+		log.Fatal(getErr)
+	}
+	if getErr != nil {
+		log.Fatal(getErr)
+	}
+
+	defer resp.Body.Close()
+
+	/* Read json file on server */
+
+	blockchain, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Take the actual length of the Json
+	index := gjson.Get(string(blockchain), "#")
+	indexInt := int(index.Int()) - 1
+	return indexInt
 }
