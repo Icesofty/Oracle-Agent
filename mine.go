@@ -128,8 +128,13 @@ func findPOW(block *Block) (int, string) {
 	}()
 	// Start timer
 	start := time.Now()
+	// Rand seed
+	rand.Seed(time.Now().UnixNano())
+
 	// Random nonce between 0 and 9223372036854775807
 	nonce := rand.Intn(9223372036854775807)
+	fmt.Println(nonce)
+
 	// Block datas to hash
 	record := block.Hash + block.PreviousHash + strconv.Itoa(int(block.Timestamp)) + strconv.Itoa(block.Index) + strconv.Itoa(nonce)
 	h := sha3.New256()
